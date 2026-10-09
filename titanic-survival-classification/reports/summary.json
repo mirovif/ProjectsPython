@@ -1,0 +1,93 @@
+{
+  "selected_model": "Random Forest",
+  "selection_metric": "3-fold ticket-group CV ROC-AUC on training only",
+  "seed": 42,
+  "rows": 891,
+  "train_rows": 711,
+  "test_rows": 180,
+  "train_survival_rate": 0.3853727144866385,
+  "test_survival_rate": 0.37777777777777777,
+  "overlapping_tickets": 0,
+  "best_parameters": {
+    "model__max_depth": null,
+    "model__min_samples_leaf": 5
+  },
+  "threshold": 0.5,
+  "confusion_matrix": [
+    [
+      94,
+      18
+    ],
+    [
+      26,
+      42
+    ]
+  ],
+  "results": [
+    {
+      "model": "Majority baseline",
+      "cv_roc_auc": 0.5,
+      "cv_roc_auc_std": 0.0,
+      "accuracy": 0.6222222222222222,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "roc_auc": 0.5
+    },
+    {
+      "model": "Logistic Regression",
+      "cv_roc_auc": 0.8818246769124315,
+      "cv_roc_auc_std": 0.023228690563937084,
+      "accuracy": 0.7555555555555555,
+      "precision": 0.6935483870967742,
+      "recall": 0.6323529411764706,
+      "f1": 0.6615384615384615,
+      "roc_auc": 0.7631302521008403
+    },
+    {
+      "model": "Decision Tree",
+      "cv_roc_auc": 0.866686438881879,
+      "cv_roc_auc_std": 0.022212202378306005,
+      "accuracy": 0.7277777777777777,
+      "precision": 0.6507936507936508,
+      "recall": 0.6029411764705882,
+      "f1": 0.6259541984732825,
+      "roc_auc": 0.7396271008403362
+    },
+    {
+      "model": "Random Forest",
+      "cv_roc_auc": 0.8892825531568821,
+      "cv_roc_auc_std": 0.0195272133129822,
+      "accuracy": 0.7555555555555555,
+      "precision": 0.7,
+      "recall": 0.6176470588235294,
+      "f1": 0.65625,
+      "roc_auc": 0.807904411764706
+    },
+    {
+      "model": "Gradient Boosting",
+      "cv_roc_auc": 0.8830411113746175,
+      "cv_roc_auc_std": 0.016949067973989224,
+      "accuracy": 0.75,
+      "precision": 0.676923076923077,
+      "recall": 0.6470588235294118,
+      "f1": 0.6616541353383458,
+      "roc_auc": 0.7999606092436975
+    }
+  ],
+  "error_by_sex": [
+    {
+      "sex": "female",
+      "count": 65,
+      "mean": 0.3230769230769231
+    },
+    {
+      "sex": "male",
+      "count": 115,
+      "mean": 0.2
+    }
+  ],
+  "python": "3.12.14",
+  "sklearn": "1.6.1",
+  "elapsed_seconds": 12.49
+}

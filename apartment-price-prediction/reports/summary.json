@@ -1,0 +1,85 @@
+{
+  "selected_model": "Gradient Boosting",
+  "selection_metric": "3-fold CV RMSE on training only",
+  "seed": 42,
+  "rows": 2930,
+  "features": 75,
+  "train_rows": 2344,
+  "test_rows": 586,
+  "best_parameters": {
+    "model__learning_rate": 0.05,
+    "model__max_depth": 3
+  },
+  "results": [
+    {
+      "model": "Median baseline",
+      "cv_rmse": 79376.16342009812,
+      "cv_rmse_std": 2236.917342889416,
+      "mae": 63838.10068259386,
+      "mse": 8896757561.564846,
+      "rmse": 94322.62486574918,
+      "r2": -0.10966066411249265
+    },
+    {
+      "model": "Ridge regression",
+      "cv_rmse": 31255.73050108842,
+      "cv_rmse_std": 6086.651865203546,
+      "mae": 16729.487068720337,
+      "mse": 846327891.0393745,
+      "rmse": 29091.71516152622,
+      "r2": 0.8944405573458727
+    },
+    {
+      "model": "Decision Tree",
+      "cv_rmse": 36121.038063114655,
+      "cv_rmse_std": 2111.2152772189543,
+      "mae": 22339.77568187186,
+      "mse": 1191141619.4704602,
+      "rmse": 34512.91960223678,
+      "r2": 0.8514331776080075
+    },
+    {
+      "model": "Random Forest",
+      "cv_rmse": 27556.377831725917,
+      "cv_rmse_std": 3323.823443193385,
+      "mae": 15652.603219154695,
+      "mse": 706189263.5495609,
+      "rmse": 26574.221786339498,
+      "r2": 0.9119195457719447
+    },
+    {
+      "model": "Gradient Boosting",
+      "cv_rmse": 25146.449615665362,
+      "cv_rmse_std": 4313.028325291607,
+      "mae": 14967.86778907263,
+      "mse": 627706441.7343836,
+      "rmse": 25054.070362605427,
+      "r2": 0.921708426673127
+    }
+  ],
+  "price_band_errors": [
+    {
+      "price_band": "Q1",
+      "count": 139,
+      "mean": 9951.26588885097
+    },
+    {
+      "price_band": "Q2",
+      "count": 142,
+      "mean": 9452.462620395867
+    },
+    {
+      "price_band": "Q3",
+      "count": 122,
+      "mean": 12234.362449617092
+    },
+    {
+      "price_band": "Q4",
+      "count": 183,
+      "mean": 24880.342376485114
+    }
+  ],
+  "python": "3.12.14",
+  "sklearn": "1.6.1",
+  "elapsed_seconds": 111.95
+}

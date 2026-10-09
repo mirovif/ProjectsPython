@@ -1,0 +1,86 @@
+{
+  "regression": {
+    "y_true": [
+      3.0,
+      -0.5,
+      2.0,
+      7.0
+    ],
+    "y_pred": [
+      2.5,
+      0.0,
+      2.0,
+      8.0
+    ]
+  },
+  "classification": {
+    "y_true": [
+      1,
+      0,
+      1,
+      1,
+      0,
+      1
+    ],
+    "y_pred": [
+      1,
+      0,
+      0,
+      1,
+      0,
+      1
+    ]
+  },
+  "metrics": {
+    "MAE": {
+      "own": 0.5,
+      "sklearn": 0.5,
+      "absolute_difference": 0.0
+    },
+    "MSE": {
+      "own": 0.375,
+      "sklearn": 0.375,
+      "absolute_difference": 0.0
+    },
+    "RMSE": {
+      "own": 0.6123724356957945,
+      "sklearn": 0.6123724356957945,
+      "absolute_difference": 0.0
+    },
+    "R2": {
+      "own": 0.9486081370449679,
+      "sklearn": 0.9486081370449679,
+      "absolute_difference": 0.0
+    },
+    "Accuracy": {
+      "own": 0.8333333333333334,
+      "sklearn": 0.8333333333333334,
+      "absolute_difference": 0.0
+    },
+    "Precision": {
+      "own": 1.0,
+      "sklearn": 1.0,
+      "absolute_difference": 0.0
+    },
+    "Recall": {
+      "own": 0.75,
+      "sklearn": 0.75,
+      "absolute_difference": 0.0
+    },
+    "F1": {
+      "own": 0.8571428571428571,
+      "sklearn": 0.8571428571428571,
+      "absolute_difference": 0.0
+    }
+  },
+  "confusion_matrix": [
+    [
+      2,
+      0
+    ],
+    [
+      1,
+      3
+    ]
+  ]
+}
