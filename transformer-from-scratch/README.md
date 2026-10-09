@@ -42,7 +42,7 @@ Boolean masks в коде: **True разрешает**, False закрывает
 Source padding mask: `(B, 1, 1, T_src)`; combined target mask: `(B, 1, T_tgt, T_tgt)`.
 Верхний треугольник target mask закрыт, поэтому будущие target-токены недоступны.
 На fully masked строках веса принудительно равны нулю; выход W_o может содержать bias.
-Loss не учитывает PAD. Дополнительные сведения: [architecture.md](docs/architecture.md).
+Loss не учитывает PAD. 
 
 ## Обучение на copy task
 
@@ -99,12 +99,12 @@ dropout train/eval, odd D positional encoding, некорректные heads/ma
 
 ## Запуск после клонирования
 
-Python 3.12, команды из корня репозитория:
+Python 3.12; команды из папки `transformer-from-scratch`:
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-python -m pip install -r requirements-lock.txt
+python -m pip install -r requirements.txt
 python -m pytest -q
 python train.py
 python generate.py 3 7 12 4
@@ -112,7 +112,7 @@ python generate.py 3 7 12 4
 
 В Windows вместо `source .venv/bin/activate` используйте `.venv\Scripts\Activate.ps1`.
 
-Зафиксированный lock использует CPU-wheel из официального PyTorch index.
+`requirements.txt` использует CPU-wheel из официального PyTorch index.
 Обучение создаёт `checkpoints/copy_model.pt`; checkpoint не коммитится в Git.
 `generate.py` читает только state_dict и конфигурацию с `weights_only=True`.
 Отдельные `--steps`, `--seed`, `--test-seed`, `--device` позволяют создать новый эксперимент,
@@ -128,7 +128,6 @@ python generate.py 3 7 12 4
 ├── masks.py
 ├── training_helpers.py
 ├── tests/
-├── docs/
 ├── data/
 ├── reports/
 ├── images/

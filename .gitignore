@@ -2,10 +2,10 @@
 __pycache__/
 .pytest_cache/
 .ipynb_checkpoints/
+.idea/
 *.py[cod]
 .env
 .env.*
-!.env.example
-.idea/
-data/raw/*
-models/*
+**/data/raw/
+**/models/
+**/checkpoints/

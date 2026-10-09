@@ -14,7 +14,7 @@
 
 В каждом проекте есть README с данными, подходом, результатами и командами запуска.
 Для каждого проекта создаётся отдельное виртуальное окружение; команды выполняются
-из его папки. Зависимости зафиксированы в `requirements-lock.txt`.
+из его папки. Зависимости зафиксированы в `requirements.txt`.
 
 ## Transformer
 
@@ -30,3 +30,9 @@
 GitHub Actions проверяет каждый проект отдельно на Python 3.12.
 Результаты обучения получены реальными запусками; источники данных и ограничения
 приведены в README проектов.
+
+## Другие проекты
+
+- [AI Agent](https://github.com/mirovif/ai-agent)
+- [ML Competition](https://github.com/mirovif/ml-competition)
+- [Metrics Python](https://github.com/mirovif/metrics-python)

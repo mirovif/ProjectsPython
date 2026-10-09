@@ -44,10 +44,6 @@ def main():
     X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]
     y_train, y_test = y.iloc[train_idx], y.iloc[test_idx]
     train_groups = groups[train_idx]
-    pd.DataFrame({'row_index': X.index, 'split': np.where(X.index.isin(X_test.index), 'test', 'train')}).to_csv(
-        ROOT / 'reports/split.csv', index=False)
-    X_train.isna().sum().sort_values(ascending=False).to_csv(ROOT / 'reports/missing_train.csv', header=['missing'])
-    X_train.describe(include='all').to_csv(ROOT / 'reports/eda_train.csv')
     fig, axes = plt.subplots(1, 3, figsize=(12, 4))
     y_train.value_counts().sort_index().plot.bar(ax=axes[0], color=[COLOR, '#a4bbc3'], rot=0)
     axes[0].set(title='Survival · training data', xlabel='0 = died / 1 = survived', ylabel='Passengers')
@@ -79,7 +75,6 @@ def main():
         searches[name] = search
         rows.append({'model': name, 'cv_roc_auc': float(search.best_score_),
                      'cv_roc_auc_std': float(search.cv_results_['std_test_score'][search.best_index_])})
-        pd.DataFrame(search.cv_results_).to_csv(ROOT / 'reports' / (name.lower().replace(' ', '_') + '_cv.csv'), index=False)
         print(name, 'CV ROC-AUC', round(search.best_score_, 4), flush=True)
     winner = max(rows, key=lambda row: row['cv_roc_auc'])['model']
     for row in rows:
@@ -92,7 +87,6 @@ def main():
                    f1=float(f1_score(y_test, predicted, zero_division=0)),
                    roc_auc=float(roc_auc_score(y_test, probability)))
     results = pd.DataFrame(rows)
-    results.to_csv(ROOT / 'reports/model_comparison.csv', index=False)
     best = searches[winner].best_estimator_
     predicted, probability = best.predict(X_test), best.predict_proba(X_test)[:, 1]
 
@@ -121,9 +115,7 @@ def main():
     errors['actual'] = y_test; errors['predicted'] = predicted; errors['probability'] = probability
     errors['incorrect'] = (y_test != predicted).astype(int)
     errors.to_csv(ROOT / 'reports/test_predictions.csv', index=False)
-    errors[errors['incorrect'] == 1].to_csv(ROOT / 'reports/misclassified.csv', index=False)
     segments = errors.groupby('sex')['incorrect'].agg(['count', 'mean'])
-    segments.to_csv(ROOT / 'reports/error_by_sex.csv')
     joblib.dump(best, ROOT / 'models/best_model.joblib')
     summary = {'selected_model': winner, 'selection_metric': '3-fold ticket-group CV ROC-AUC on training only',
                'seed': SEED, 'rows': len(frame), 'train_rows': len(X_train), 'test_rows': len(X_test),

@@ -37,11 +37,7 @@ def main():
     frame = load_frame(download_data())
     X, y = prepare_features(frame), frame['SalePrice']
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.2, random_state=SEED)
-    pd.DataFrame({'row_index': X.index, 'split': np.where(X.index.isin(X_test.index), 'test', 'train')}).to_csv(
-        ROOT / 'reports/split.csv', index=False)
 
-    X_train.isna().sum().sort_values(ascending=False).to_csv(ROOT / 'reports/missing_train.csv', header=['missing'])
-    X_train.describe(include='all').to_csv(ROOT / 'reports/eda_train.csv')
     plt.hist(y_train, bins=35, color=COLOR, edgecolor='white')
     plt.title('Ames sale prices · training data'); plt.xlabel('Sale price (USD)'); plt.ylabel('Properties')
     plt.gca().xaxis.set_major_formatter(FuncFormatter(lambda v, _: f'{v/1000:,.0f}k'))
@@ -72,7 +68,6 @@ def main():
         searches[name] = search
         rows.append({'model': name, 'cv_rmse': -float(search.best_score_),
                      'cv_rmse_std': float(search.cv_results_['std_test_score'][search.best_index_])})
-        pd.DataFrame(search.cv_results_).to_csv(ROOT / 'reports' / (name.lower().replace(' ', '_') + '_cv.csv'), index=False)
         print(name, 'CV RMSE', round(-search.best_score_, 2), flush=True)
     winner = min(rows, key=lambda row: row['cv_rmse'])['model']
 
@@ -82,7 +77,6 @@ def main():
         row.update(mae=float(mean_absolute_error(y_test, prediction)), mse=float(mse),
                    rmse=float(np.sqrt(mse)), r2=float(r2_score(y_test, prediction)))
     results = pd.DataFrame(rows)
-    results.to_csv(ROOT / 'reports/model_comparison.csv', index=False)
     best = searches[winner].best_estimator_
     prediction = best.predict(X_test)
     errors = X_test.copy()
@@ -90,11 +84,9 @@ def main():
     errors['actual'] = y_test; errors['predicted'] = prediction
     errors['residual'] = y_test - prediction; errors['absolute_error'] = abs(errors['residual'])
     errors.to_csv(ROOT / 'reports/test_predictions.csv', index=False)
-    errors.nlargest(10, 'absolute_error').to_csv(ROOT / 'reports/worst_errors.csv', index=False)
     bounds = np.r_[-np.inf, y_train.quantile([.25, .5, .75]).values, np.inf]
     errors['price_band'] = pd.cut(y_test, bounds, labels=['Q1', 'Q2', 'Q3', 'Q4'])
     segments = errors.groupby('price_band', observed=True)['absolute_error'].agg(['count', 'mean'])
-    segments.to_csv(ROOT / 'reports/error_by_price_band.csv')
     fig, axes = plt.subplots(1, 2, figsize=(11, 4.5))
     axes[0].scatter(y_test, prediction, alpha=.55, s=18, color=COLOR)
     limits = [min(y_test.min(), prediction.min()), max(y_test.max(), prediction.max())]

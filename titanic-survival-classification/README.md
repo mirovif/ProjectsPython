@@ -51,7 +51,7 @@ Confusion matrix показывает конкретные FP/FN; ROC-AUC не �
 
 Majority baseline, Logistic Regression, Decision Tree, Random Forest и Gradient Boosting.
 Параметры выбранной модели: `{"model__max_depth": null, "model__min_samples_leaf": 5}`.
-Полные кандидаты и результаты folds сохранены в [reports/](reports/).
+Параметры и результаты моделей сохранены в [summary.json](reports/summary.json).
 
 | Модель | CV ROC-AUC ± std | Accuracy | Precision | Recall | F1 | Test ROC-AUC |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -83,8 +83,7 @@ Random Forest выбран по ROC-AUC; это не означает, что о
 | male | 115 | 0.200 |
 
 Группы малы, и различие ошибок — диагностическое наблюдение, а не доказательство причин.
-[misclassified.csv](reports/misclassified.csv) содержит конкретные ошибки без полных имён,
-а [test_predictions.csv](reports/test_predictions.csv) — все labels и вероятности.
+[test_predictions.csv](reports/test_predictions.csv) содержит labels, вероятности и признак ошибки без полных имён.
 
 ![Permutation importance](images/feature_importance.png)
 
@@ -105,12 +104,12 @@ Importance рассчитана перемешиванием исходных п
 
 ## Воспроизведение
 
-Python 3.12, из корня репозитория:
+Python 3.12; команды из папки `titanic-survival-classification`:
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-python -m pip install -r requirements-lock.txt
+python -m pip install -r requirements.txt
 python -m pytest -q
 python run.py
 python predict.py example_input.csv --output predictions.csv
@@ -121,13 +120,10 @@ python predict.py example_input.csv --output predictions.csv
 Для первой загрузки нужен интернет; дальше используется проверенный cache.
 `example_input.csv` содержит три исходные строки train без target и нужен только для демонстрации inference.
 Модель сохраняется в `models/best_model.joblib`, графики — `images/`, фактические таблицы — `reports/`.
-[analysis.ipynb](notebooks/analysis.ipynb) показывает EDA и диагностику из тех же артефактов;
-Jupyter можно установить отдельно для его интерактивного открытия.
 
 ```text
 ├── src/titanic/
 ├── tests/
-├── notebooks/
 ├── data/
 ├── reports/
 ├── images/

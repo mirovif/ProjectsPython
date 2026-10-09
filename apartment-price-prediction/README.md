@@ -36,8 +36,8 @@ Target — `SalePrice`, в долларах США периода сделки; 
 7. **3-fold KFold**, shuffle, seed 42; небольшие сетки параметров. Модель выбрана по минимальному CV RMSE.
    После выбора один раз оценены все зафиксированные модели на test. Выбор по test не выполнялся.
 
-Дорогие объекты и большие ошибки не удалялись из test. Точные параметры и все CV-кандидаты
-сохранены в [reports/](reports/); параметры победителя: `{"model__learning_rate": 0.05, "model__max_depth": 3}`.
+Дорогие объекты и большие ошибки не удалялись из test. Параметры и результаты моделей
+сохранены в [summary.json](reports/summary.json); параметры победителя: `{"model__learning_rate": 0.05, "model__max_depth": 3}`.
 
 ## Модели и метрики
 
@@ -79,8 +79,7 @@ CV std — вариация между тремя folds, **не доверите
 
 ¹ Границы Q1–Q4 — квартильные границы target **обучающей** части, применённые к test.
 Высокая ошибка в дорогом сегменте может повышать RMSE при умеренном MAE.
-Топ-10 ошибок доступны в [worst_errors.csv](reports/worst_errors.csv), а все предсказания —
-в [test_predictions.csv](reports/test_predictions.csv). Остаток определён как actual − predicted:
+Предсказания и ошибки доступны в [test_predictions.csv](reports/test_predictions.csv). Остаток определён как actual − predicted:
 положительный означает недооценку.
 
 ![Важность исходных признаков](images/feature_importance.png)
@@ -110,12 +109,12 @@ Permutation importance измеряет изменение RMSE при пере�
 
 ## Воспроизведение
 
-Python 3.12; запуск из корня репозитория:
+Python 3.12; команды из папки `apartment-price-prediction`:
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-python -m pip install -r requirements-lock.txt
+python -m pip install -r requirements.txt
 python -m pytest -q
 python run.py
 python predict.py example_input.csv --output predictions.csv
@@ -128,13 +127,10 @@ python predict.py example_input.csv --output predictions.csv
 а не дополнительная оценка качества. Вход для inference — CSV с теми же именами исходных признаков.
 Запуск сохраняет модель в `models/best_model.joblib`, таблицы в `reports/`, графики в `images/`.
 Версии и split записаны в summary; выполнение занимает несколько минут и зависит от компьютера.
-Notebook [analysis.ipynb](notebooks/analysis.ipynb) читает те же артефакты и показывает EDA и ошибки.
-Для интерактивного открытия notebook можно отдельно установить `jupyter`.
 
 ```text
 ├── src/housing/
 ├── tests/
-├── notebooks/
 ├── data/
 ├── reports/
 ├── images/

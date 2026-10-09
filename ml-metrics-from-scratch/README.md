@@ -78,19 +78,19 @@ Confusion matrix: строки — истинные классы, столбцы
 | F1 | 0.857142857 | 0.857142857 | 0.0e+00 |
 
 `examples.py` проверяет числа через `np.testing.assert_allclose(rtol=1e-12, atol=1e-12)`
-и сохраняет [examples.json](reports/examples.json).
+и выводит результаты в терминал.
 81 тест покрывает случайные данные, исходный пример Accuracy, постоянный target,
 отрицательный R², нулевые знаменатели, NaN/inf, пустые/несовпадающие массивы
 и отклонение probabilities/multiclass. Weighted и multiclass метрики намеренно не реализованы.
 
 ## Запуск
 
-Python 3.12, из корня проекта:
+Python 3.12; команды из папки `ml-metrics-from-scratch`:
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-python -m pip install -r requirements-lock.txt
+python -m pip install -r requirements.txt
 python -m pytest -q
 python examples.py
 ```
@@ -104,6 +104,5 @@ python examples.py
 ```text
 ├── src/ml_metrics/
 ├── tests/
-├── reports/
 └── examples.py
 ```
