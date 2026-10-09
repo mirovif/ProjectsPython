@@ -1,145 +1,122 @@
-# Transformer From Scratch · PyTorch
+# Transformer From Scratch
 
-**Encoder–decoder Transformer, реализованный с нуля на PyTorch.**
-Multi-Head Attention, positional encoding, encoder и decoder реализованы отдельными модулями.
-Проект включает обучение на copy task, autoregressive generation и тесты.
-Attention вычисляется вручную через Q/K/V projections и матричные операции,
-без готовых `nn.Transformer` и `nn.MultiheadAttention`.
+Encoder–decoder Transformer на PyTorch. Attention рассчитывается через проекции Q, K, V
+и матричные операции; готовый `nn.Transformer` не используется.
+Модель обучается копировать последовательность токенов и генерирует ответ по одному токену.
+
+## Архитектура
 
 ![Архитектура Transformer](images/architecture.svg)
 
 `Input → Embedding + Positional Encoding → Encoder → Decoder → Linear → Vocabulary`
 
-Source проходит в encoder; decoder получает BOS и сдвинутые target-токены,
-а также память encoder через cross-attention. Linear возвращает logits по словарю.
+Encoder обрабатывает исходную последовательность. Decoder получает предыдущие токены
+ответа и выход encoder через cross-attention. Линейный слой выдаёт logits по словарю.
 
-## Архитектура и формы тензоров
-
-`B` — batch size; `T` — sequence length; `D` — d_model; `V` — vocabulary size;
-`h` — number of heads; `d_k = D / h`; `N` — число Transformer blocks.
-`T_src` и `T_tgt` могут различаться.
-
-| Компонент | Форма |
+| Файл | Компонент |
 |---|---|
-| Input tokens | `(B, T_src)` / `(B, T_tgt)` |
-| Embedding + positional encoding | `(B, T, D)` |
-| Q/K/V после разделения heads | `(B, h, T, d_k)` |
+| [Transformer.py](Transformer.py) | Сборка модели и выходной линейный слой |
+| [InputEmbedding.py](InputEmbedding.py) | Embedding, синусоидальное positional encoding и dropout |
+| [MultiHeadAttention.py](MultiHeadAttention.py) | Проекции Q/K/V, разделение на головы и scaled dot-product attention |
+| [Encoder.py](Encoder.py), [Encoder_Block.py](Encoder_Block.py) | Стек encoder и его блок |
+| [Decoder.py](Decoder.py), [Decoder_Block.py](Decoder_Block.py) | Стек decoder и его блок |
+| [FeedForward.py](FeedForward.py) | Два линейных слоя с ReLU |
+| [AddNorm.py](AddNorm.py) | Residual connection и LayerNorm после сложения |
+
+Encoder block: `Self-attention → AddNorm → FFN → AddNorm`.
+Decoder block: `Causal self-attention → AddNorm → Cross-attention → AddNorm → FFN → AddNorm`.
+Dropout применяется в embedding.
+
+$$Attention(Q,K,V) = softmax(QK^T / sqrt{d_k} + M)V$$
+
+### Формы тензоров
+
+`B` — размер батча, `T` — длина последовательности, `D` — размер embedding,
+`V` — размер словаря, `h` — число голов, `d_k = D / h`, `N` — число блоков.
+
+| Тензор | Форма |
+|---|---|
+| Токены source / target | `(B, T_src)` / `(B, T_tgt)` |
+| Embedding | `(B, T, D)` |
+| Q/K/V по головам | `(B, h, T, d_k)` |
 | Self-attention scores | `(B, h, T, T)` |
-| Decoder cross-attention scores | `(B, h, T_tgt, T_src)` |
-| Feed Forward Network | `(B, T, D)` → `(B, T, D_ff)` → `(B, T, D)` |
-| Linear output logits | `(B, T_tgt, V)` |
+| Cross-attention scores | `(B, h, T_tgt, T_src)` |
+| Feed Forward | `(B, T, D)` → `(B, T, D_ff)` → `(B, T, D)` |
+| Выход модели | `(B, T_tgt, V)` |
 
-Encoder block: `Self-attention → Add + LayerNorm → FFN → Add + LayerNorm`.
-Decoder block: `Causal self-attention → Add + LayerNorm → Cross-attention → Add + LayerNorm → FFN → Add + LayerNorm`.
-LayerNorm применяется **после** сложения residual. Dropout остаётся в embedding;
-attention/residual dropout из оригинальной статьи пока не добавлены.
+### Маски
 
-$$Attention(Q,K,V) = softmax(QK^T / \sqrt{d_k} + M)V$$
+В boolean mask `True` разрешает attention, `False` закрывает его.
+`Transformer.forward` принимает `src_mask` и `tgt_mask`; при обучении и генерации
+их создаёт [training_helpers.py](training_helpers.py).
+Source mask имеет форму `(B, 1, 1, T_src)`, target mask — `(B, 1, T_tgt, T_tgt)`.
+Первая закрывает padding, вторая — padding и будущие токены.
+Causal mask действует при переданном `tgt_mask`. PAD исключён из расчёта loss.
 
-Boolean masks в коде: **True разрешает**, False закрывает attention.
-`Transformer.forward` принимает `src_mask` и `tgt_mask` явно. Для обучения и генерации
-они создаются в `training_helpers.py`; без `tgt_mask` causal masking не применяется.
-Source padding mask: `(B, 1, 1, T_src)`; combined target mask: `(B, 1, T_tgt, T_tgt)`.
-Верхний треугольник target mask закрыт, поэтому будущие target-токены недоступны.
-На fully masked строках веса принудительно равны нулю; выход W_o может содержать bias.
-Loss не учитывает PAD. 
+## Обучение
 
-## Обучение на copy task
+В задаче копирования ответ должен повторить входную последовательность и завершиться EOS.
+Длина входа — 3–7 токенов, значения — от 3 до 23. Служебные токены: PAD=0, BOS=1, EOS=2.
+Обучающая выборка содержит 1,024 последовательности, validation и test — по 128.
+Последовательности уникальны и не пересекаются между частями; seeds — 42, 43 и 45.
+Разбиения записаны в [copy_splits.json](data/copy_splits.json).
 
-Задача **синтетического копирования последовательности**, а не перевод или real-text NLP benchmark.
-Она проверяет, что attention, masks, teacher forcing, backpropagation и генерация работают вместе.
-Каждая последовательность содержит 3–7 token IDs из `[3, 23]`; PAD=0, BOS=1, EOS=2.
-Словарь V=24. Целевая последовательность совпадает с source; EOS должен быть сгенерирован.
+Конфигурация: `D=32`, `h=4`, `d_ff=64`, `N=2`, `max_len=16`, `dropout=0.1`.
+Размер словаря — 24, число параметров — 45,080.
+Обучение на CPU: Adam, `lr=0.001`, batch size 64, gradient clipping 1.0, 2,400 шагов.
+На вход decoder подаются BOS и предыдущие правильные токены ответа — teacher forcing.
+Loss — cross-entropy. По минимальному validation loss выбран checkpoint шага 2,350.
 
-- Train: **1024**, validation: **128**, final test: **128** уникальных последовательностей без пересечений.
-- Train seed=42, validation seed=43, final test seed=45.
-- D=32, h=4, d_k=8, D_ff=64, N=2, max_len=16, embedding dropout=0.1.
-- Параметров: **45,080**. CPU, PyTorch **2.8.0+cpu**.
-- Adam lr=0.001, batch=64, gradient clipping=1.0, **2400 steps**.
-- Target input = BOS + предыдущие токены; labels = следующие токены + EOS.
-- CrossEntropyLoss принимает logits, `ignore_index=PAD`. Softmax перед loss не используется.
-- Checkpoint выбран по минимальному validation loss на step **2350**.
-  Test оценивается после выбора checkpoint.
+![Кривая обучения](images/training_curve.png)
 
-Конфигурация и протокол оценки записаны в [summary.json](reports/summary.json),
-а история обучения — в [training_history.csv](reports/training_history.csv).
-
-| Оценка | Фактическое значение |
+| Метрика | Значение |
 |---|---:|
-| Initial validation cross-entropy | 3.3370 |
-| Selected validation cross-entropy | 0.6312 |
-| Final test cross-entropy | 0.6317 |
-| Final test teacher-forced token accuracy | 80.876% |
-| Final test greedy sequence exact match | 32.812% |
+| Validation loss до обучения | 3.3370 |
+| Validation loss выбранной модели | 0.6312 |
+| Test loss | 0.6317 |
+| Test token accuracy с teacher forcing | 80.876% |
+| Test полное совпадение при greedy generation | 32.812% |
 
-Teacher-forced token accuracy получает правильный предыдущий target-токен.
-Greedy exact match генерирует **всю последовательность самостоятельно**, включая EOS;
-одна неверная позиция делает весь пример ошибочным. Поэтому две метрики нельзя смешивать.
+Token accuracy измеряет следующий токен при правильном предыдущем контексте.
+Полное совпадение проверяет самостоятельную генерацию всей последовательности, включая EOS.
+Модель правильно копирует около трети тестовых примеров; высокий результат по отдельным
+токенам пока не даёт такого же качества при генерации целого ответа.
 
-![Обучение и validation](images/training_curve.png)
+| Вход | Сгенерированный ответ |
+|---|---|
+| `[16, 18, 11, 5, 12]` | `[16, 18, 11, 5, 12]` |
+| `[3, 5, 18, 3, 6]` | `[3, 5, 18, 6]` |
 
-- Успешный пример: input `[16, 18, 11, 5, 12]` → generated `[16, 18, 11, 5, 12]`; EOS: `True`.
-- Ошибка: input `[3, 5, 18, 3, 6]` → generated `[3, 5, 18, 6]`; EOS: `True`.
+В обоих примерах сгенерирован EOS.
+[Конфигурация и метрики](reports/summary.json) ·
+[История обучения](reports/training_history.csv) ·
+[Все тестовые ответы](reports/test_generations.json)
 
-Все 128 примеров доступны в [test_generations.json](reports/test_generations.json).
-Greedy exact match 32.8% остаётся ограниченным: разрыв с token accuracy показывает,
-что корректный следующий токен при teacher forcing ещё не гарантирует самостоятельное
-копирование целиком. Training loss заметно ниже validation loss, поэтому дальнейшее
-увеличение числа steps само по себе не устраняет ограничение обобщения.
-Это не доказательство качества перевода или готовности модели к работе с текстом.
-Поведение проверено на небольшой конфигурации CPU; перенос на GPU и длинные тексты отдельно не оценивался.
+Пока обучение проверено на синтетических последовательностях.
+Следующий шаг — токенизация текстового корпуса и обучение на задаче перевода.
+Архитектура основана на [Attention Is All You Need](https://arxiv.org/abs/1706.03762);
+параметры обучения и dropout отличаются от описанных в статье.
 
-## Тестирование
+## Тесты
 
-22 теста: независимая сверка attention через einsum, разные T_src/T_tgt,
-causal invariance, padding keys, неизменность повторно переданных masks,
-finite forward/backward, градиенты через encoder/decoder/FFN, state_dict,
-dropout train/eval, odd D positional encoding, некорректные heads/masks/длина,
-раздельные datasets, tiny overfit, интерфейсы классов и работа явно переданных masks.
+22 теста проверяют расчёт attention, causal и padding masks, градиенты,
+сохранение весов, формы тензоров, неверные входы и переобучение на маленькой выборке.
+## Запуск
 
-## Запуск после клонирования
+Python 3.12. Команды для PowerShell из папки `transformer-from-scratch`:
 
-Python 3.12; команды из папки `transformer-from-scratch`:
-
-```bash
+```powershell
 python -m venv .venv
-source .venv/bin/activate
+.\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
 python -m pytest -q
 python train.py
 python generate.py 3 7 12 4
 ```
 
-В Windows вместо `source .venv/bin/activate` используйте `.venv\Scripts\Activate.ps1`.
+В Linux и macOS окружение активируется командой `source .venv/bin/activate`.
 
-`requirements.txt` использует CPU-wheel из официального PyTorch index.
-Обучение создаёт `checkpoints/copy_model.pt`; checkpoint не коммитится в Git.
-`generate.py` читает только state_dict и конфигурацию с `weights_only=True`.
-Отдельные `--steps`, `--seed`, `--test-seed`, `--device` позволяют создать новый эксперимент,
-но изменённая конфигурация уже не воспроизводит таблицу выше.
-
-```text
-├── Transformer.py
-├── MultiHeadAttention.py
-├── InputEmbedding.py
-├── Encoder.py / Encoder_Block.py
-├── Decoder.py / Decoder_Block.py
-├── FeedForward.py / AddNorm.py
-├── masks.py
-├── training_helpers.py
-├── tests/
-├── data/
-├── reports/
-├── images/
-├── train.py
-└── generate.py
-```
-
-## Ограничения и развитие
-
-Соответствие оригинальной статье не заявляется полностью: отсутствуют её training recipe,
-attention/residual dropout и реальный переводческий benchmark.
-Следующий шаг — tokenizer и открытый корпус, отдельный data protocol, scheduler/warmup
-и сравнение с простой seq2seq baseline.
-
-Статья: [Attention Is All You Need](https://arxiv.org/abs/1706.03762).
+Зависимости включают CPU-версию PyTorch.
+`train.py` сохраняет веса в `checkpoints/copy_model.pt`, отчёты — в `reports/`,
+разбиения — в `data/`, кривую обучения — в `images/`.
+Для работы `generate.py` сначала запустите обучение: веса не хранятся в Git.
